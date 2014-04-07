@@ -1,0 +1,3 @@
+<mathsat.cm{x,}a>: package(gmp), use_mathsat
+<mathsat.cmxs>: package(gmp), link_mathsat
+<test.*>: package(gmp), package(oUnit), use_mathsat

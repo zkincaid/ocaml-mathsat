@@ -1,0 +1,6 @@
+name="MathSAT"
+version="0.1"
+description="OCaml bindings to MathSAT 5"
+requires="gmp"
+archive(byte) = "mathsat.cma"
+archive(native) = "mathsat.cmxa"
