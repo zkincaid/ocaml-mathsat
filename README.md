@@ -9,8 +9,7 @@ computing interpolants for linear rational/integer arithmetic is implemented.
 Building
 ========
 
-Requires MathSAT 5 to be installed in a place where gcc and ld can find it.
- Also requires MLGMPIDL and OUnit to be installed through ocamlfind.
+Requires MathSAT 5 to be installed in a place where gcc and ld can find it (e.g., `libmathsat.a` in `/usr/lib`, and `mathsat.h` in `/usr/include`). Also requires MLGMPIDL and OUnit to be installed through ocamlfind.
 * `make` builds the library and runs unit tests
 * `make docs` builds documentation
 * `make install` installs the library though ocamlfind

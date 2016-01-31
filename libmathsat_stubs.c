@@ -13,6 +13,7 @@ struct custom_operations envs;
 struct custom_operations terms;
 struct custom_operations types;
 struct custom_operations decls;
+struct custom_operations models;
 
 /* macro definitions, borrowed from the BuDDy OCaml bindings:
    https://github.com/abate/ocaml-buddy
@@ -24,6 +25,7 @@ struct custom_operations decls;
 #define TYPE_val(v) (*((msat_type*)Data_custom_val(v)))
 #define DECL_val(v) (*((msat_decl*)Data_custom_val(v)))
 #define MPQ_val(v) (*((mpq_t*)Data_custom_val(v)))
+#define MODEL_val(v) (*((msat_model*)Data_custom_val(v)))
 
 #define RESULT_val(v) Int_val(v)
 
@@ -44,8 +46,12 @@ void _make_type(value* vptr, msat_type x) {
     TYPE_val(*vptr) = x;
 }
 void _make_decl(value* vptr, msat_decl x) {
-    *vptr = alloc_custom(&types, sizeof(msat_decl), 0, 1);
+    *vptr = alloc_custom(&decls, sizeof(msat_decl), 0, 1);
     DECL_val(*vptr) = x;
+}
+void _make_model(value* vptr, msat_model x) {
+    *vptr = alloc_custom(&models, sizeof(msat_model), 0, 1);
+    MODEL_val(*vptr) = x;
 }
 
 #define FUN_ARG_msat_config(x, v) \
@@ -58,6 +64,8 @@ void _make_decl(value* vptr, msat_decl x) {
     msat_type x = TYPE_val(v);
 #define FUN_ARG_msat_decl(x, v) \
     msat_decl x = DECL_val(v);
+#define FUN_ARG_msat_model(x, v) \
+    msat_model x = MODEL_val(v);
 #define FUN_ARG_int(x, v) \
   int x = Int_val(v);
 #define FUN_ARG_string(x, v) \
@@ -94,6 +102,10 @@ void _make_decl(value* vptr, msat_decl x) {
 #define FUN_RET_msat_decl(eval) \
     CAMLlocal1(r);		\
     _make_decl(&r, eval);       \
+    CAMLreturn(r);
+#define FUN_RET_msat_model(eval) \
+    CAMLlocal1(r);		\
+    _make_model(&r, eval);       \
     CAMLreturn(r);
 #define FUN_RET_msat_result(eval) \
     CAMLreturn(Val_int(eval))
@@ -242,11 +254,7 @@ FUN2(msat_term_is_atom, msat_env, msat_term, bool)
 FUN2(msat_term_is_number, msat_env, msat_term, bool)
 CAMLprim value wrapper_msat_term_to_number(value env, value term, value mpq) {
     CAMLparam3(env, term, mpq);
-    int ret = msat_term_to_number(ENV_val(env),
-
-				  TERM_val(term),
-
-				  MPQ_val(mpq));
+    int ret = msat_term_to_number(ENV_val(env), TERM_val(term), MPQ_val(mpq));
     FUN_RET_int(ret);
 }
 
@@ -291,3 +299,9 @@ CAMLprim value wrapper_msat_get_interpolant(value env, value a_groups) {
     }
     FUN_RET_msat_term(msat_get_interpolant(ENV_val(env), groups, len));
 }
+
+/* Model computation */
+FUN2(msat_get_model_value, msat_env, msat_term, msat_term)
+FUN1(msat_get_model, msat_env, msat_model)
+FUN1(msat_destroy_model, msat_model, unit)
+FUN2(msat_model_eval, msat_model, msat_term, msat_term)

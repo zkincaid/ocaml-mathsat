@@ -104,6 +104,28 @@ let number_test () =
   assert_equal (msat_term_to_number env one) (Mpq.of_int 1);
   assert_equal (msat_term_to_number env frac) (Mpq.of_frac 123 456)
 
+let model_test () =
+  let cfg = msat_create_config () in
+  msat_set_option cfg "model_generation" "true";
+  let env = msat_create_env cfg in
+  let int_typ = msat_get_integer_type env in
+  let x_decl = msat_declare_function env "x" int_typ in
+  let y_decl = msat_declare_function env "y" int_typ in
+  let x = msat_make_constant env x_decl in
+  let y = msat_make_constant env y_decl in
+  let one = msat_make_number env "1" in
+  let two = msat_make_number env "2" in
+  msat_assert_formula env (msat_make_equal env x one);
+  msat_assert_formula env (msat_make_equal env y two);
+  assert_equal (msat_solve env) Sat;
+  let model = msat_get_model env in
+  let x_val = msat_model_eval model x in
+  assert_equal (msat_term_is_number env x_val) true;
+  assert_equal (msat_term_to_number env x_val) (Mpq.of_int 1);
+  let y_val = msat_model_eval model y in
+  assert_equal (msat_term_is_number env y_val) true;
+  assert_equal (msat_term_to_number env y_val) (Mpq.of_int 2)
+
 let all =
   "MathSAT" >::: [
     "types" >:: types_test;
@@ -111,7 +133,8 @@ let all =
     "arith" >:: arith_test;
     "constant" >:: constant_test;
     "interpolation" >:: interpolation_test;
-    "number" >:: number_test
+    "number" >:: number_test;
+    "model" >:: model_test
   ]
 
 let _ =

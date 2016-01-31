@@ -18,6 +18,9 @@ type msat_decl
 (** MathSAT data types. *)
 type msat_type
 
+(** MathSAT model. *)
+type msat_model
+
 (** MathSAT result. *)
 type msat_result_internal = int
 type msat_result =
@@ -371,3 +374,20 @@ let msat_set_itp_group env group =
     [MSAT_UNSAT] was returned. Moreover, interpolation must have been enabled in
     the configuration for the environment *)
 external msat_get_interpolant : msat_env -> int list -> msat_term = "wrapper_msat_get_interpolant"
+
+(** {2 Model computation} *)
+
+(** Returns the value of the term term in the current model. Preconditions:
+- model computation was enabled in the configuration of the environment
+- the last call to [!msat_solve] returned a [MSAT_SAT] result
+- no assert/push/pop/allsat commands have been issued in the meantime *)
+external msat_get_model_value : msat_env -> msat_term -> msat_term = "wrapper_msat_get_model_value"
+
+(** Creates a model object. *)
+external msat_get_model : msat_env -> msat_model = "wrapper_msat_get_model"
+
+(** Destroys the given model object. *)
+external msat_destroy_model : msat_model -> unit = "wrapper_msat_destroy_model"
+
+(** Evaluates the input term in the given model. *)
+external msat_model_eval : msat_model -> msat_term -> msat_term = "wrapper_msat_model_eval"
