@@ -96,6 +96,9 @@ external msat_get_rational_type : msat_env -> msat_type = "wrapper_msat_get_rati
 (** Returns the data type for integers in the given env. *)
 external msat_get_integer_type : msat_env -> msat_type = "wrapper_msat_get_integer_type"
 
+(** Returns a function type in the given env. *)
+external msat_get_function_type : msat_env -> msat_type list -> msat_type -> msat_type = "wrapper_msat_get_function_type"
+
 (** Checks whether the given type is bool. *)
 external msat_is_bool_type : msat_env -> msat_type -> bool = "wrapper_msat_is_bool_type"
 
@@ -166,6 +169,9 @@ external msat_make_term_ite : msat_env -> msat_term -> msat_term -> msat_term ->
 (** Creates a constant from a declaration. *)
 external msat_make_constant : msat_env -> msat_decl -> msat_term = "wrapper_msat_make_constant"
 
+(** Creates an uninterpreted function application. *)
+external msat_make_uf : msat_env -> msat_decl -> msat_term list -> msat_term = "wrapper_msat_make_uf"
+
 (** Creates a term in [e] from an equivalent term [t] that was created in
     [src]. *)
 external msat_make_copy_from : msat_env -> msat_term -> msat_env = "wrapper_msat_make_copy_from"
@@ -200,6 +206,9 @@ external msat_term_is_false : msat_env -> msat_term -> bool = "wrapper_msat_term
 
 (** Checks whether [t] is a boolean constant. *)
 external msat_term_is_boolean_constant : msat_env -> msat_term -> bool = "wrapper_msat_term_is_boolean_constant"
+
+(** Checks whether [t] is an uninterpreted function application. *)
+external msat_term_is_uf : msat_env -> msat_term -> bool = "wrapper_msat_term_is_uf"
 
 (** Checks whether [t] is an atom. *)
 external msat_term_is_atom : msat_env -> msat_term -> bool = "wrapper_msat_term_is_atom"
@@ -238,6 +247,9 @@ external msat_term_is_plus : msat_env -> msat_term -> bool = "wrapper_msat_term_
 
 (** Checks whether [t] is a [t1 * t2] expression. *)
 external msat_term_is_times : msat_env -> msat_term -> bool = "wrapper_msat_term_is_times"
+
+(** Checks whether [t] is a term if-then-else. *)
+external msat_term_is_term_ite : msat_env -> msat_term -> bool = "wrapper_msat_term_is_term_ite"
 
 (** Checks whether [t] is a [floor t1] expression. *)
 external msat_term_is_floor : msat_env -> msat_term -> bool = "wrapper_msat_term_is_floor"
@@ -351,3 +363,18 @@ external msat_destroy_model : msat_model -> unit = "wrapper_msat_destroy_model"
 
 (** Evaluates the input term in the given model. *)
 external msat_model_eval : msat_model -> msat_term -> msat_term = "wrapper_msat_model_eval"
+
+val msat_destruct : msat_env -> msat_term ->
+  [ `Tru
+  | `Fls
+  | `Real of Mpq.t
+  | `Add of msat_term list
+  | `Mul of msat_term list
+  | `Unop of [`Floor] * msat_term
+  | `Atom of [`Eq | `Leq] * msat_term * msat_term
+  | `And of msat_term list
+  | `Or of msat_term list
+  | `Not of msat_term
+  | `Iff of msat_term * msat_term
+  | `Ite of msat_term * msat_term * msat_term
+  | `App of msat_decl * (msat_term list) ]

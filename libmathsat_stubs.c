@@ -219,6 +219,22 @@ FUN3(msat_set_option, msat_config, string, string, int)
 FUN1(msat_get_bool_type, msat_env, msat_type)
 FUN1(msat_get_rational_type, msat_env, msat_type)
 FUN1(msat_get_integer_type, msat_env, msat_type)
+
+CAMLprim value wrapper_msat_get_function_type(value env, value args, value ret) {
+    CAMLparam3(env, args, ret);
+    size_t len = length(args);
+    msat_type arg_types[len];
+    int i = 0;
+    while (args != Val_emptylist) {
+	arg_types[i++] = TYPE_val(Field(args, 0));
+	args = Field(args, 1);
+    }
+    FUN_RET_msat_type(msat_get_function_type(ENV_val(env),
+					     arg_types,
+					     len,
+					     TYPE_val(ret)));
+}
+
 FUN2(msat_is_bool_type, msat_env, msat_type, bool)
 FUN2(msat_is_rational_type, msat_env, msat_type, bool)
 FUN2(msat_is_integer_type, msat_env, msat_type, bool)
@@ -240,6 +256,19 @@ FUN2(msat_make_floor, msat_env, msat_term, msat_term)
 FUN2(msat_make_number, msat_env, string, msat_term)
 FUN4(msat_make_term_ite, msat_env, msat_term, msat_term, msat_term, msat_term)
 FUN2(msat_make_constant, msat_env, msat_decl, msat_term)
+
+CAMLprim value wrapper_msat_make_uf(value env, value decl, value cargs) {
+    CAMLparam3(env, decl, cargs);
+    size_t len = length(cargs);
+    msat_term args[len];
+    int i = 0;
+    while (cargs != Val_emptylist) {
+	args[i++] = TERM_val(Field(cargs, 0));
+	cargs = Field(cargs, 1);
+    }
+    FUN_RET_msat_term(msat_make_uf(ENV_val(env), DECL_val(decl), args));
+}
+
 FUN3(msat_make_copy_from, msat_env, msat_term, msat_env, msat_term)
 
 /* Term access and navigation */
@@ -262,11 +291,13 @@ FUN2(msat_term_is_and, msat_env, msat_term, bool)
 FUN2(msat_term_is_or, msat_env, msat_term, bool)
 FUN2(msat_term_is_not, msat_env, msat_term, bool)
 FUN2(msat_term_is_iff, msat_env, msat_term, bool)
+FUN2(msat_term_is_uf, msat_env, msat_term, bool)
 FUN2(msat_term_is_constant, msat_env, msat_term, bool)
 FUN2(msat_term_is_equal, msat_env, msat_term, bool)
 FUN2(msat_term_is_leq, msat_env, msat_term, bool)
 FUN2(msat_term_is_plus, msat_env, msat_term, bool)
 FUN2(msat_term_is_times, msat_env, msat_term, bool)
+FUN2(msat_term_is_term_ite, msat_env, msat_term, bool)
 FUN2(msat_term_is_floor, msat_env, msat_term, bool)
 FUN2(msat_find_decl, msat_env, string, msat_decl)
 FUN1(msat_term_get_decl, msat_term, msat_decl)

@@ -112,6 +112,9 @@ external msat_get_rational_type : msat_env -> msat_type = "wrapper_msat_get_rati
 (** Returns the data type for integers in the given env. *)
 external msat_get_integer_type : msat_env -> msat_type = "wrapper_msat_get_integer_type"
 
+(** Returns a function type in the given env. *)
+external msat_get_function_type : msat_env -> msat_type list -> msat_type -> msat_type = "wrapper_msat_get_function_type"
+
 (** Checks whether the given type is bool. *)
 external msat_is_bool_type : msat_env -> msat_type -> bool = "wrapper_msat_is_bool_type"
 
@@ -182,6 +185,9 @@ external msat_make_term_ite : msat_env -> msat_term -> msat_term -> msat_term ->
 (** Creates a constant from a declaration. *)
 external msat_make_constant : msat_env -> msat_decl -> msat_term = "wrapper_msat_make_constant"
 
+(** Creates an uninterpreted function application. *)
+external msat_make_uf : msat_env -> msat_decl -> msat_term list -> msat_term = "wrapper_msat_make_uf"
+
 (** Creates a term in [e] from an equivalent term [t] that was created in
     [src]. *)
 external msat_make_copy_from : msat_env -> msat_term -> msat_env = "wrapper_msat_make_copy_from"
@@ -220,6 +226,10 @@ external msat_term_is_false : msat_env -> msat_term -> bool = "wrapper_msat_term
 
 (** Checks whether [t] is a boolean constant. *)
 external msat_term_is_boolean_constant : msat_env -> msat_term -> bool = "wrapper_msat_term_is_boolean_constant"
+
+(** Checks whether [t] is an uninterpreted function application. *)
+external msat_term_is_uf : msat_env -> msat_term -> bool = "wrapper_msat_term_is_uf"
+
 
 (** Checks whether [t] is an atom. *)
 external msat_term_is_atom : msat_env -> msat_term -> bool = "wrapper_msat_term_is_atom"
@@ -263,6 +273,9 @@ external msat_term_is_plus : msat_env -> msat_term -> bool = "wrapper_msat_term_
 
 (** Checks whether [t] is a [t1 * t2] expression. *)
 external msat_term_is_times : msat_env -> msat_term -> bool = "wrapper_msat_term_is_times"
+
+(** Checks whether [t] is a term if-then-else. *)
+external msat_term_is_term_ite : msat_env -> msat_term -> bool = "wrapper_msat_term_is_term_ite"
 
 (** Checks whether [t] is a [floor t1] expression. *)
 external msat_term_is_floor : msat_env -> msat_term -> bool = "wrapper_msat_term_is_floor"
@@ -391,3 +404,43 @@ external msat_destroy_model : msat_model -> unit = "wrapper_msat_destroy_model"
 
 (** Evaluates the input term in the given model. *)
 external msat_model_eval : msat_model -> msat_term -> msat_term = "wrapper_msat_model_eval"
+
+let msat_destruct env term =
+  if msat_term_is_true env term then `Tru
+  else if msat_term_is_false env term then `Fls
+  else if msat_term_is_number env term then `Real (msat_term_to_number env term)
+  else if msat_term_is_and env term then `And (msat_term_children term)
+  else if msat_term_is_or env term then `Or (msat_term_children term)
+  else if msat_term_is_not env term then
+    match msat_term_children term with
+    | [phi] -> `Not phi
+    | _ -> invalid_arg "msat_destruct: ill-formed negation"
+  else if msat_term_is_iff env term then
+    match msat_term_children term with
+    | [phi;psi] -> `Iff (phi, psi)
+    | _ -> invalid_arg "msat_destruct: ill-formed iff"
+  else if msat_term_is_term_ite env term then
+    match msat_term_children term with
+    | [phi;s;t] -> `Ite (phi, s, t)
+    | _ -> invalid_arg "msat_destruct: ill-formed ite"
+  else if msat_term_is_constant env term then
+    `App (msat_term_get_decl term, [])
+  else if msat_term_is_uf env term then
+    match msat_term_children term with
+    | f::args -> `App (msat_term_get_decl f, args)
+    | _ -> invalid_arg "msat_destruct: ill-formed function application"
+  else if msat_term_is_leq env term then
+    match msat_term_children term with
+    | [s;t] -> `Atom (`Leq, s, t)
+    | _ -> invalid_arg "msat_destruct: ill-formed leq"
+  else if msat_term_is_equal env term then
+    match msat_term_children term with
+    | [s;t] -> `Atom (`Eq, s, t)
+    | _ -> invalid_arg "msat_destruct: ill-formed equality"
+  else if msat_term_is_plus env term then `Add (msat_term_children term)
+  else if msat_term_is_times env term then `Mul (msat_term_children term)
+  else if msat_term_is_floor env term then
+    match msat_term_children term with
+    | [t] -> `Unop (`Floor, t)
+    | _ -> invalid_arg "msat_destruct: ill-formed floor"
+  else invalid_arg "msat_destruct: unknown term type"
