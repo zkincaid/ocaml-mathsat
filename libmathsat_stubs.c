@@ -133,6 +133,15 @@ CAMLprim value wrapper_##name(value v0) \
   FUN_RET_##ret_type(name(x)); \
 }
 
+#define FUN10(name, arg0_type, ret_type) \
+void wrapper_##name(value v0) \
+{  \
+  CAMLparam1(v0); \
+  FUN_ARG_##arg0_type(x, v0); \
+  FUN_RET_##ret_type(name(x)); \
+}
+
+
 #define FUN11(name, arg0_type, ret_type) \
 void wrapper_##name(value v0) \
 {  \
@@ -197,10 +206,10 @@ static inline size_t length (value l) {
 
 FUN0(msat_create_config, msat_config)
 FUN1(msat_parse_config, string, msat_config)
-FUN1(msat_destroy_config, msat_config, unit)
+FUN10(msat_destroy_config, msat_config, unit)
 FUN1(msat_create_env, msat_config, msat_env)
 FUN2(msat_create_shared_env, msat_config, msat_env, msat_env)
-FUN1(msat_destroy_env, msat_env, unit)
+FUN10(msat_destroy_env, msat_env, unit)
 CAMLprim value wrapper_msat_gc_env(value env, value tokeep) {
     CAMLparam2(env, tokeep);
     size_t len = length(tokeep);
@@ -334,5 +343,5 @@ CAMLprim value wrapper_msat_get_interpolant(value env, value a_groups) {
 /* Model computation */
 FUN2(msat_get_model_value, msat_env, msat_term, msat_term)
 FUN1(msat_get_model, msat_env, msat_model)
-FUN1(msat_destroy_model, msat_model, unit)
+FUN10(msat_destroy_model, msat_model, unit)
 FUN2(msat_model_eval, msat_model, msat_term, msat_term)
